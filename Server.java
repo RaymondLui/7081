@@ -224,9 +224,17 @@ public class Server {
 					String[] upass = line.split(":");
 					String u = upass[0]; 
 					String p = upass[1];
+					String t = upass[2];
+					
+					if(t.equals("777"))
+						t = new String("Admin");
+					else if(t.equals("666"))
+						t = new String("Scrum Master");
+					else if(t.equals("555"))
+						t = new String("Developer");
 
 					if(u.equals(user) && p.equals(pass)) {
-						display(user + " just connected.");
+						display(t + " " + user + " just connected.");
 						username = user;
 						flag = true;
 					}
@@ -272,12 +280,55 @@ public class Server {
 				switch(cm.getType()) {
 
 				case ChatMessage.MESSAGE:
-					if (message.contains("--adduser")) // Client sends msg: --adduser
-						// Split message into commands
-						// Check pass.txt for admin access
-						// Edit pass.txt with 3rd column for admin access
-						// Append pass.txt with new user credentials
-					else				
+					if (message.startsWith("--adduser")) {
+						// usage: --adduser <name> <access#>
+						String line = "";
+						try{						
+							BufferedReader br = new BufferedReader(new FileReader("pass.txt"));
+							while((line = br.readLine()) != null) {
+								String [] dbAccess = line.split(":");
+								if(dbAccess[0].equals(username) && dbAccess[2].equals("777"))
+								{
+									String [] userInput = message.split(" ");
+									if(userInput.length != 4)
+										broadcast("Usage: --adduser <username> <password> <access>");
+									else {
+										String newUser = userInput[1];
+										String newPass = userInput[2];
+										String accessCode = userInput[3];
+										BufferedWriter bw = new BufferedWriter(new FileWriter("pass.txt", true));
+										String newID = newUser + ":" + newPass + ":" + accessCode;
+										bw.append(newID);
+										bw.newLine();
+										bw.close();
+										broadcast(newUser + " has been created.");
+									}
+								}
+								if(dbAccess[0].equals(username) && dbAccess[2].equals("666"))
+								{
+									String [] userInput = message.split(" ");
+									if(userInput.length != 4 || !(userInput[3].equals("555")))
+										broadcast("Usage: --adduser <username> <password> <access>" + 
+													"Scrum Master may only add/remove developers");
+									else
+									{
+										String newUser = userInput[1];
+										String newPass = userInput[2];
+										String accessCode = userInput[3];
+										BufferedWriter bw = new BufferedWriter(new FileWriter("pass.txt", true));
+										String newID = newUser + ":" + newPass + ":" + accessCode;
+										bw.append(newID);
+										bw.newLine();
+										bw.close();
+										broadcast(newUser + " Developer has been created.");
+									}
+								}
+							}
+						} catch (IOException e) {
+							broadcast("Errors: " + e);
+						}
+
+					} else				
 						broadcast(username + ": " + message);
 					break;
 				case ChatMessage.LOGOUT:
