@@ -27,9 +27,61 @@ public class ChatMessage implements Serializable {
 	int getType() {
 		return type;
 	}
-	String getMessage() {
+	String getMessage(String username) {
+		if (message.startsWith("--adduser")) {
+			// usage: --adduser <name> <access#>
+			String line = "";
+			try{						
+				BufferedReader br = new BufferedReader(new FileReader("pass.txt"));
+				while((line = br.readLine()) != null) {
+					String [] dbAccess = line.split(":");
+					if(dbAccess[0].equals(username) && dbAccess[2].equals("777"))
+					{
+						String [] userInput = message.split(" ");
+						if(userInput.length != 4)
+						{
+							return("Usage: --adduser <username> <password> <access>");
+						}
+						else 
+						{
+							String newUser = userInput[1];
+							String newPass = userInput[2];
+							String accessCode = userInput[3];
+							BufferedWriter bw = new BufferedWriter(new FileWriter("pass.txt", true));
+							String newID = newUser + ":" + newPass + ":" + accessCode;
+							bw.append(newID);
+							bw.newLine();
+							bw.close();
+							return(newUser + " has been created.");
+						}
+					}
+					if(dbAccess[0].equals(username) && dbAccess[2].equals("666"))
+					{
+						String [] userInput = message.split(" ");
+						if(userInput.length != 4 || !(userInput[3].equals("555")))
+						{
+							return("Usage: --adduser <username> <password> <access>" + 
+								"Scrum Master may only add/remove developers");
+						}
+						else
+						{
+							String newUser = userInput[1];
+							String newPass = userInput[2];
+							String accessCode = userInput[3];
+							BufferedWriter bw = new BufferedWriter(new FileWriter("pass.txt", true));
+							String newID = newUser + ":" + newPass + ":" + accessCode;
+							bw.append(newID);
+							bw.newLine();
+							bw.close();
+							return(newUser + " Developer has been created.");
+						}
+					}
+				}
+			} catch (IOException e) {
+				return("Errors: " + e);
+			}
+		}
 		return message;
 	}
 }
-
 
