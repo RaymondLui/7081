@@ -241,7 +241,7 @@ public class Server {
 				
 				}
  				if (flag == false) { 
-					String tmp = "Ni";
+					String tmp = "denied";
 					sOutput.writeObject(tmp);
 				}
 				br.close();
@@ -274,7 +274,7 @@ public class Server {
 					break;
 				}
 				// the messaage part of the ChatMessage
-				String message = cm.getMessage();
+				String message = cm.getMessage(username);
 
 				// Switch on the type of message receive
 				switch(cm.getType()) {
