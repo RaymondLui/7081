@@ -19,8 +19,10 @@ public class Server {
 	private int port;
 	// the boolean that will be turned of to stop the server
 	private boolean online;
-	
-
+	// list of chat rooms
+	private ArrayList<ChatRoom> rooms;
+	// the number of rooms currently in existence
+	private static int numberOfRooms = 0;
 	/*
 	 *  server constructor that receive the port to listen to for connection as parameter
 	 *  in console
@@ -38,6 +40,7 @@ public class Server {
 		sdf = new SimpleDateFormat("HH:mm:ss");
 		// ArrayList for the Client list
 		al = new ArrayList<ClientThread>();
+		rooms = new ArrayList<ChatRoom>();
 	}
 	
 	public void start() {
@@ -138,6 +141,32 @@ public class Server {
 			}
 		}
 	}
+	
+	private synchronized void broadcastToRooms(String message) {
+		// add HH:mm:ss and \n to the message
+		String time = sdf.format(new Date());
+		String messageLf = time + " " + message + "\n";
+		ArrayList<ClientThread> members = new ArrayList<ClientThread>();
+		// display message on console or GUI
+		if(sg == null)
+			System.out.print(messageLf);
+		else
+			sg.appendRoom(messageLf);     // append in the room window
+		// 
+		for(int i = 0 ; i < rooms.size(); i++)
+		{
+			ChatRoom temp = rooms.get(i);
+			members = temp.roomMembers;
+				for(int k = members.size(); --k >= 0;) {
+					ClientThread ct = members.get(k);
+				// try to write to the Client if it fails remove it from the list
+					if(!ct.writeMsg(messageLf)) {
+					al.remove(i);
+						display("Disconnected Client " + ct.username + " removed from list.");
+					}
+				}
+		}
+	}
 
 	// for a client who logoff using the LOGOUT message
 	synchronized void remove(int id) {
@@ -182,6 +211,53 @@ public class Server {
 		Server server = new Server(portNumber);
 		server.start();
 	}
+	
+	class ChatRoom
+	{
+		private String name = "";
+		int number;
+		public ArrayList<ClientThread> roomMembers = new ArrayList<ClientThread>();
+		
+		ChatRoom(String name, int num)
+		{
+			this.name = name;
+			this.number = num;
+		}
+		ChatRoom(ChatRoom c)
+		{
+			this.name = c.name;
+			this.roomMembers = c.roomMembers;
+			this.number = c.number;
+		}
+
+		
+		String getRoomName()
+		{
+			return this.name;
+		}
+		
+		String memberList()
+		{
+			String list = new String();
+			for(int i = 0 ; i < roomMembers.size(); i++)
+			{
+				list += " " + roomMembers.get(i).username;
+			}
+
+			return "Members online :" + list;
+		}
+		
+		int getRoomNumber()
+		{
+			return this.number;
+		}
+		
+		void addUser(ClientThread client)
+		{
+			roomMembers.add(client);
+		}
+		
+	}
 
 	/** One instance of this thread will run for each client */
 	class ClientThread extends Thread {
@@ -197,6 +273,8 @@ public class Server {
 		ChatMessage cm;
 		// the date I connect
 		String date;
+		
+		int room = 0;
 
 		// Constructore
 		ClientThread(Socket socket) {
@@ -293,6 +371,19 @@ public class Server {
 						ClientThread ct = al.get(i);
 						writeMsg((i+1) + ") " + ct.username + " since " + ct.date);
 					}
+					writeMsg("list of rooms currently open : ");
+					for(int i = 0; i < rooms.size(); i++)
+					{
+						ChatRoom tempRoom = new ChatRoom(rooms.get(i));
+						writeMsg(tempRoom.getRoomName() + tempRoom.memberList());
+					}
+					break;
+				case ChatMessage.COMMAND:
+					//broadcast(username + "has Joined room  : " + message);			
+					ChatRoom tempRoom = new ChatRoom(message, numberOfRooms);	
+					tempRoom.addUser(this);					
+					rooms.add(tempRoom);
+					numberOfRooms++;
 					break;
 				}
 			}
