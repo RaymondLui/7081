@@ -13,7 +13,7 @@ public class ChatMessage implements Serializable {
 	// WHOISIN to receive the list of the users connected
 	// MESSAGE an ordinary message
 	// LOGOUT to disconnect from the Server
-	static final int WHOISIN = 0, MESSAGE = 1, LOGOUT = 2, COMMAND = 3;
+	static final int WHOISIN = 0, MESSAGE = 1, LOGOUT = 2, CREATEROOM = 3, JOINROOM = 4, LEAVE = 5;
 	private int type;
 	private String message;
 	private String [] userInput;
@@ -33,9 +33,21 @@ public class ChatMessage implements Serializable {
 	
 	String getMessage(String username) {
 		
+		
+		if(message.startsWith("--leave"))
+		{
+			type = 5;
+			return "--leave";
+		}
+		
 		if(message.startsWith("--join"))
 		{
-			
+			userInput = message.split(" ");
+			if(userInput.length == 2 )
+			{
+				type = 4;
+				return userInput[1];
+			}
 		}
 		else
 		if(message.startsWith("--room"))

@@ -142,7 +142,7 @@ public class Server {
 		}
 	}
 	
-	private synchronized void broadcastToRooms(String message) {
+	private synchronized void broadcastToRooms(String message, ClientThread c) {
 		// add HH:mm:ss and \n to the message
 		String time = sdf.format(new Date());
 		String messageLf = time + " " + message + "\n";
@@ -156,15 +156,16 @@ public class Server {
 		for(int i = 0 ; i < rooms.size(); i++)
 		{
 			ChatRoom temp = rooms.get(i);
-			members = temp.roomMembers;
-				for(int k = members.size(); --k >= 0;) {
-					ClientThread ct = members.get(k);
+			
+			if(temp.isMember(c))
+			{
+				temp.broadcastRooms(message);
+			}
 				// try to write to the Client if it fails remove it from the list
-					if(!ct.writeMsg(messageLf)) {
-					al.remove(i);
-						display("Disconnected Client " + ct.username + " removed from list.");
-					}
-				}
+//					if(!ct.writeMsg(messageLf)) {
+//					al.remove(i);
+//						display("Disconnected Client " + ct.username + " removed from list.");
+//					}
 		}
 	}
 
@@ -215,21 +216,45 @@ public class Server {
 	class ChatRoom
 	{
 		private String name = "";
-		int number;
+		//int number;
 		public ArrayList<ClientThread> roomMembers = new ArrayList<ClientThread>();
 		
-		ChatRoom(String name, int num)
+		ChatRoom(String name)
 		{
 			this.name = name;
-			this.number = num;
+			//this.number = num;
 		}
 		ChatRoom(ChatRoom c)
 		{
 			this.name = c.name;
 			this.roomMembers = c.roomMembers;
-			this.number = c.number;
+			//this.number = c.number;
 		}
-
+		
+		void broadcastRooms(String m)
+		{
+			for(int i = roomMembers.size(); --i >= 0;) {
+				ClientThread ct = roomMembers.get(i);
+				// try to write to the Client if it fails remove it from the list
+				if(!ct.writeMsg(m)) {
+					roomMembers.remove(i);
+					//display("Disconnected Client " + ct.username + " removed from list.");
+				}
+			}
+		}
+		
+		boolean isMember(ClientThread c)
+		{
+			for(int i = 0; i < roomMembers.size(); i++)
+			{
+				ClientThread ct = roomMembers.get(i);
+				if(c.equals(ct))
+				{
+					return true;
+				}
+			}	
+			return false;
+		}
 		
 		String getRoomName()
 		{
@@ -249,12 +274,19 @@ public class Server {
 		
 		int getRoomNumber()
 		{
-			return this.number;
+			//return this.number;
+			return 0;
 		}
 		
-		void addUser(ClientThread client)
+		void addUser(ClientThread c)
 		{
-			roomMembers.add(client);
+			if(!roomMembers.add(c))
+				display("error adding client");
+		}
+		
+		void removeUser(ClientThread c)
+		{
+			roomMembers.remove(c);
 		}
 		
 	}
@@ -358,11 +390,20 @@ public class Server {
 				switch(cm.getType()) {
 
 				case ChatMessage.MESSAGE:
-					broadcast(username + ": " + message);
+					//broadcast(username + ": " + message);
+					broadcastToRooms(username + ": " + message , this);
 					break;
 				case ChatMessage.LOGOUT:
 					display(username + " disconnected.");
 					online = false;
+					for(int i = 0; i < rooms.size(); i++)
+					{
+						if(rooms.get(i).isMember(this))
+						{
+							rooms.get(i).removeUser(this);
+							rooms.get(i).broadcastRooms(username + " has left the room");
+						}
+					}
 					break;
 				case ChatMessage.WHOISIN:
 					writeMsg("List of the users connected at " + sdf.format(new Date()) + "\n");
@@ -378,12 +419,30 @@ public class Server {
 						writeMsg(tempRoom.getRoomName() + tempRoom.memberList());
 					}
 					break;
-				case ChatMessage.COMMAND:
+				case ChatMessage.CREATEROOM:
 					//broadcast(username + "has Joined room  : " + message);			
-					ChatRoom tempRoom = new ChatRoom(message, numberOfRooms);	
-					tempRoom.addUser(this);					
+					ChatRoom tempRoom = new ChatRoom(message);	
+					tempRoom.addUser(this);
+					tempRoom.broadcastRooms(username + "has joined the room " + tempRoom.getRoomName());
 					rooms.add(tempRoom);
 					numberOfRooms++;
+					break;
+				case ChatMessage.JOINROOM:
+					for(int i = 0 ; i < rooms.size(); i++)
+					{
+						if(rooms.get(i).getRoomName().equalsIgnoreCase(message))
+							rooms.get(i).addUser(this);
+					}
+					break;
+				case ChatMessage.LEAVE:
+					for(int i = 0; i < rooms.size(); i++)
+					{
+						if(rooms.get(i).isMember(this))
+						{
+							rooms.get(i).removeUser(this);
+							rooms.get(i).broadcastRooms(username + " has left the room");
+						}
+					}
 					break;
 				}
 			}
