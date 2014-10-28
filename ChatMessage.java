@@ -13,9 +13,10 @@ public class ChatMessage implements Serializable {
 	// WHOISIN to receive the list of the users connected
 	// MESSAGE an ordinary message
 	// LOGOUT to disconnect from the Server
-	static final int WHOISIN = 0, MESSAGE = 1, LOGOUT = 2;
+	static final int WHOISIN = 0, MESSAGE = 1, LOGOUT = 2, CREATEROOM = 3, JOINROOM = 4, LEAVE = 5;
 	private int type;
 	private String message;
+	private String [] userInput;
 	
 	// constructor
 	ChatMessage(int type, String message) {
@@ -27,7 +28,38 @@ public class ChatMessage implements Serializable {
 	int getType() {
 		return type;
 	}
+	
+	
+	
 	String getMessage(String username) {
+		
+		
+		if(message.startsWith("--leave"))
+		{
+			type = 5;
+			return "--leave";
+		}
+		else
+		if(message.startsWith("--join"))
+		{
+			userInput = message.split(" ");
+			if(userInput.length == 2 )
+			{
+				type = 4;
+				return userInput[1];
+			}
+		}
+		else
+		if(message.startsWith("--room"))
+		{
+			userInput = message.split(" ");
+			if(userInput.length == 2)
+			{
+				type = 3;
+				return userInput[1];
+			}
+		}
+		else
 		if (message.startsWith("--adduser")) {
 			// usage: --adduser <name> <access#>
 			String line = "";
@@ -37,7 +69,7 @@ public class ChatMessage implements Serializable {
 					String [] dbAccess = line.split(":");
 					if(dbAccess[0].equals(username) && dbAccess[2].equals("777"))
 					{
-						String [] userInput = message.split(" ");
+						userInput = message.split(" ");
 						if(userInput.length != 4)
 						{
 							return("Usage: --adduser <username> <password> <access>");

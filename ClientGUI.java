@@ -16,7 +16,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 	// to hold the server address an the port number
 	private JTextField tfServer, tfPort, tfUser, tfPass;
 	// to Logout and get the list of the users
-	private JButton login, logout, whoIsIn;
+	private JButton login, logout, whoIsIn, room, leave;
 	// for the chat room
 	private JTextArea ta;
 	// if it is for connection
@@ -89,7 +89,13 @@ public class ClientGUI extends JFrame implements ActionListener {
 		msgPanel.add(tfMsg);
 		southPanel.add(msgPanel);
 
-		// the 3 buttons
+		// the buttons
+		leave = new JButton("Leave Room");
+		leave.addActionListener(this);
+		leave.setEnabled(false);	// you have to login before leaving a room
+		room = new JButton("Join Rooms");
+		room.addActionListener(this);
+		room.setEnabled(false);		// you have to login before seeing the rooms
 		login = new JButton("Login");
 		login.addActionListener(this);
 		logout = new JButton("Logout");
@@ -102,6 +108,8 @@ public class ClientGUI extends JFrame implements ActionListener {
 		buttonPanel.add(login);
 		buttonPanel.add(logout);
 		buttonPanel.add(whoIsIn);
+		buttonPanel.add(room);
+		buttonPanel.add(leave);
 		southPanel.add(buttonPanel);
 
 		add(southPanel, BorderLayout.SOUTH);
@@ -125,6 +133,8 @@ public class ClientGUI extends JFrame implements ActionListener {
 		login.setEnabled(false);
 		logout.setEnabled(false);
 		whoIsIn.setEnabled(false);
+		room.setEnabled(false);
+		leave.setEnabled(false);
 		// reset port number and host name as a construction time
 		tfPort.setText("" + defaultPort);
 		tfServer.setText(defaultHost);
@@ -148,6 +158,17 @@ public class ClientGUI extends JFrame implements ActionListener {
 	*/
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
+		
+		//if it is the leave room button
+		if(o == leave)
+		{
+			client.sendMessage(new ChatMessage(ChatMessage.LEAVE, ""));
+			room.setEnabled(true);
+			leave.setEnabled(false);
+			ta.setText("");
+			return;
+		}
+		
 		// if it is the Logout button
 		if(o == logout) {
 			client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
@@ -157,6 +178,17 @@ public class ClientGUI extends JFrame implements ActionListener {
 		if(o == whoIsIn) {
 			client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));				
 			return;
+		//
+		}
+		//if it is the rooms button
+		if(o == room)
+		{
+			String roomName = JOptionPane.showInputDialog("Room name?");
+			client.sendMessage(new ChatMessage(ChatMessage.JOINROOM, roomName));
+			room.setEnabled(false);
+			leave.setEnabled(true);
+			return;
+			//do something.
 		}
 
 		// ok it is coming from the JTextField
@@ -209,10 +241,11 @@ public class ClientGUI extends JFrame implements ActionListener {
 			}
 			// disable login button
 			login.setEnabled(false);
-			// enable the 2 buttons
+			// enable the  buttons
+			leave.setEnabled(false);
 			logout.setEnabled(true);
 			whoIsIn.setEnabled(true);
-
+			room.setEnabled(true);
 			tfMsg.setEditable(true);
 
 			// Disable textfields once logged in.
