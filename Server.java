@@ -19,8 +19,10 @@ public class Server {
 	private int port;
 	// the boolean that will be turned of to stop the server
 	private boolean online;
-	
-
+	// list of chat rooms
+	private ArrayList<ChatRoom> rooms;
+	// the number of rooms currently in existence
+	private static int numberOfRooms = 0;
 	/*
 	 *  server constructor that receive the port to listen to for connection as parameter
 	 *  in console
@@ -38,6 +40,7 @@ public class Server {
 		sdf = new SimpleDateFormat("HH:mm:ss");
 		// ArrayList for the Client list
 		al = new ArrayList<ClientThread>();
+		rooms = new ArrayList<ChatRoom>();
 	}
 	
 	public void start() {
@@ -138,6 +141,33 @@ public class Server {
 			}
 		}
 	}
+	
+	private synchronized void broadcastToRooms(String message, ClientThread c) {
+		// add HH:mm:ss and \n to the message
+		String time = sdf.format(new Date());
+		String messageLf = time + " " + message + "\n";
+		ArrayList<ClientThread> members = new ArrayList<ClientThread>();
+		// display message on console or GUI
+		if(sg == null)
+			System.out.print(messageLf);
+		else
+			sg.appendRoom(messageLf);     // append in the room window
+		// 
+		for(int i = 0 ; i < rooms.size(); i++)
+		{
+			ChatRoom temp = rooms.get(i);
+			
+			if(temp.isMember(c))
+			{
+				temp.broadcastRooms(message);
+			}
+				// try to write to the Client if it fails remove it from the list
+//					if(!ct.writeMsg(messageLf)) {
+//					al.remove(i);
+//						display("Disconnected Client " + ct.username + " removed from list.");
+//					}
+		}
+	}
 
 	// for a client who logoff using the LOGOUT message
 	synchronized void remove(int id) {
@@ -182,6 +212,84 @@ public class Server {
 		Server server = new Server(portNumber);
 		server.start();
 	}
+	
+	class ChatRoom
+	{
+		private String name = "";
+		//int number;
+		public ArrayList<ClientThread> roomMembers = new ArrayList<ClientThread>();
+		
+		ChatRoom(String name)
+		{
+			this.name = name;
+			//this.number = num;
+		}
+		ChatRoom(ChatRoom c)
+		{
+			this.name = c.name;
+			this.roomMembers = c.roomMembers;
+			//this.number = c.number;
+		}
+		
+		void broadcastRooms(String m)
+		{
+			for(int i = roomMembers.size(); --i >= 0;) {
+				ClientThread ct = roomMembers.get(i);
+				// try to write to the Client if it fails remove it from the list
+				if(!ct.writeMsg(m)) {
+					roomMembers.remove(i);
+					//display("Disconnected Client " + ct.username + " removed from list.");
+				}
+			}
+		}
+		
+		boolean isMember(ClientThread c)
+		{
+			for(int i = 0; i < roomMembers.size(); i++)
+			{
+				ClientThread ct = roomMembers.get(i);
+				if(c.equals(ct))
+				{
+					return true;
+				}
+			}	
+			return false;
+		}
+		
+		String getRoomName()
+		{
+			return this.name;
+		}
+		
+		String memberList()
+		{
+			String list = new String();
+			for(int i = 0 ; i < roomMembers.size(); i++)
+			{
+				list += " " + roomMembers.get(i).username;
+			}
+
+			return "Members online :" + list;
+		}
+		
+		int getRoomNumber()
+		{
+			//return this.number;
+			return 0;
+		}
+		
+		void addUser(ClientThread c)
+		{
+			if(!roomMembers.add(c))
+				display("error adding client");
+		}
+		
+		void removeUser(ClientThread c)
+		{
+			roomMembers.remove(c);
+		}
+		
+	}
 
 	/** One instance of this thread will run for each client */
 	class ClientThread extends Thread {
@@ -197,6 +305,8 @@ public class Server {
 		ChatMessage cm;
 		// the date I connect
 		String date;
+		
+		int room = 0;
 
 		// Constructore
 		ClientThread(Socket socket) {
@@ -241,7 +351,7 @@ public class Server {
 				
 				}
  				if (flag == false) { 
-					String tmp = "Ni";
+					String tmp = "denied";
 					sOutput.writeObject(tmp);
 				}
 				br.close();
@@ -274,66 +384,26 @@ public class Server {
 					break;
 				}
 				// the messaage part of the ChatMessage
-				String message = cm.getMessage();
+				String message = cm.getMessage(username);
 
 				// Switch on the type of message receive
 				switch(cm.getType()) {
 
 				case ChatMessage.MESSAGE:
-					if (message.startsWith("--adduser")) {
-						// usage: --adduser <name> <access#>
-						String line = "";
-						try{						
-							BufferedReader br = new BufferedReader(new FileReader("pass.txt"));
-							while((line = br.readLine()) != null) {
-								String [] dbAccess = line.split(":");
-								if(dbAccess[0].equals(username) && dbAccess[2].equals("777"))
-								{
-									String [] userInput = message.split(" ");
-									if(userInput.length != 4)
-										broadcast("Usage: --adduser <username> <password> <access>");
-									else {
-										String newUser = userInput[1];
-										String newPass = userInput[2];
-										String accessCode = userInput[3];
-										BufferedWriter bw = new BufferedWriter(new FileWriter("pass.txt", true));
-										String newID = newUser + ":" + newPass + ":" + accessCode;
-										bw.append(newID);
-										bw.newLine();
-										bw.close();
-										broadcast(newUser + " has been created.");
-									}
-								}
-								if(dbAccess[0].equals(username) && dbAccess[2].equals("666"))
-								{
-									String [] userInput = message.split(" ");
-									if(userInput.length != 4 || !(userInput[3].equals("555")))
-										broadcast("Usage: --adduser <username> <password> <access>" + 
-													"Scrum Master may only add/remove developers");
-									else
-									{
-										String newUser = userInput[1];
-										String newPass = userInput[2];
-										String accessCode = userInput[3];
-										BufferedWriter bw = new BufferedWriter(new FileWriter("pass.txt", true));
-										String newID = newUser + ":" + newPass + ":" + accessCode;
-										bw.append(newID);
-										bw.newLine();
-										bw.close();
-										broadcast(newUser + " Developer has been created.");
-									}
-								}
-							}
-						} catch (IOException e) {
-							broadcast("Errors: " + e);
-						}
-
-					} else				
-						broadcast(username + ": " + message);
+					//broadcast(username + ": " + message);
+					broadcastToRooms(username + ": " + message , this);
 					break;
 				case ChatMessage.LOGOUT:
 					display(username + " disconnected.");
 					online = false;
+					for(int i = 0; i < rooms.size(); i++)
+					{
+						if(rooms.get(i).isMember(this))
+						{
+							rooms.get(i).removeUser(this);
+							rooms.get(i).broadcastRooms(username + " has left the room");
+						}
+					}
 					break;
 				case ChatMessage.WHOISIN:
 					writeMsg("List of the users connected at " + sdf.format(new Date()) + "\n");
@@ -341,6 +411,37 @@ public class Server {
 					for(int i = 0; i < al.size(); ++i) {
 						ClientThread ct = al.get(i);
 						writeMsg((i+1) + ") " + ct.username + " since " + ct.date);
+					}
+					writeMsg("list of rooms currently open : ");
+					for(int i = 0; i < rooms.size(); i++)
+					{
+						ChatRoom tempRoom = new ChatRoom(rooms.get(i));
+						writeMsg(tempRoom.getRoomName() + tempRoom.memberList());
+					}
+					break;
+				case ChatMessage.CREATEROOM:
+					//broadcast(username + "has Joined room  : " + message);			
+					ChatRoom tempRoom = new ChatRoom(message);	
+					tempRoom.addUser(this);
+					tempRoom.broadcastRooms(username + "has joined the room " + tempRoom.getRoomName());
+					rooms.add(tempRoom);
+					numberOfRooms++;
+					break;
+				case ChatMessage.JOINROOM:
+					for(int i = 0 ; i < rooms.size(); i++)
+					{
+						if(rooms.get(i).getRoomName().equalsIgnoreCase(message))
+							rooms.get(i).addUser(this);
+					}
+					break;
+				case ChatMessage.LEAVE:
+					for(int i = 0; i < rooms.size(); i++)
+					{
+						if(rooms.get(i).isMember(this))
+						{
+							rooms.get(i).removeUser(this);
+							rooms.get(i).broadcastRooms(username + " has left the room");
+						}
 					}
 					break;
 				}

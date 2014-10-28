@@ -61,10 +61,10 @@ public class Client  {
 			display("Error connectiong to server:" + ec);
 			return false;
 		}
-		
+	
 		String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
 		display(msg);
-	
+
 		/* Creating both Data Stream */
 		try
 		{
@@ -73,6 +73,7 @@ public class Client  {
 		}
 		catch (IOException eIO) {
 			display("Exception creating new Input/output Streams: " + eIO);
+			disconnect();
 			return false;
 		}
 
@@ -239,15 +240,19 @@ public class Client  {
 						cg.append(msg);
 					} */
 			
-					if (msg.equals("Ni") ){
+					if (msg.equals("denied")){
 						display("Incorrect Username/Password");
-						cg.connectionFailed();
+						//cg.connectionFailed();
+						disconnect();
 					}
-					display(msg);
+					else
+					{
+						display(msg);
+					}
 
 				}
 				catch(IOException e) {
-					display("Server has close the connection: " + e);
+					display("Client has close the connection.");
 					if(cg != null) 
 						cg.connectionFailed();
 					break;

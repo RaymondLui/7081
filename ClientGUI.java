@@ -121,7 +121,8 @@ public class ClientGUI extends JFrame implements ActionListener {
 	// called by the GUI is the connection failed
 	// we reset our buttons, label, textfield
 	void connectionFailed() {
-		login.setEnabled(true);
+		connected = false;
+		login.setEnabled(false);
 		logout.setEnabled(false);
 		whoIsIn.setEnabled(false);
 		// reset port number and host name as a construction time
@@ -134,7 +135,12 @@ public class ClientGUI extends JFrame implements ActionListener {
 		tfPass.setEditable(true);
 		// don't react to a <CR> after the username
 		tfMsg.removeActionListener(this);
-		connected = false;
+		try{
+			Thread.sleep(500);
+			login.setEnabled(true);
+		} 
+		catch (InterruptedException e) {
+		}
 	}
 		
 	/*
@@ -195,7 +201,12 @@ public class ClientGUI extends JFrame implements ActionListener {
 				return;
 
 			connected = true;
-			
+			try{
+				Thread.sleep(500);
+			}
+			catch (InterruptedException r)
+			{
+			}
 			// disable login button
 			login.setEnabled(false);
 			// enable the 2 buttons
