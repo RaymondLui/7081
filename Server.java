@@ -1,7 +1,13 @@
 import java.io.*;
 import java.net.*;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.ArrayList;
+import java.sql.DriverManager;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.ResultSet;
 
 /*
  * The server that can be run both as a console application or a GUI
@@ -23,6 +29,7 @@ public class Server {
 	private ArrayList<ChatRoom> rooms;
 	// the number of rooms currently in existence
 	private static int numberOfRooms = 0;
+	
 	/*
 	 *  server constructor that receive the port to listen to for connection as parameter
 	 *  in console
@@ -191,6 +198,18 @@ public class Server {
 	public static void main(String[] args) {
 		// start server on port 1500 unless a PortNumber is specified 
 		int portNumber = 1500;
+		// Connect to the DB
+		
+		// Load JDBC Driver for MySQL
+		try
+		{
+			Class.forName("com.mysql.jdbc.Driver");
+		}
+		catch (ClassNotFoundException e)
+		{
+			System.out.println("JDBC driver not found");
+		}
+		
 		switch(args.length) {
 			case 1:
 				try {
@@ -308,13 +327,14 @@ public class Server {
 		
 		int room = 0;
 
-		// Constructore
+		// Constructor
 		ClientThread(Socket socket) {
 			// a unique id
 			id = ++uniqueId;
 			this.socket = socket;
 			/* Creating both Data Stream */
 			System.out.println("Thread trying to create Object Input/Output Streams");
+			
 			try
 			{
 				// create output first
@@ -326,44 +346,47 @@ public class Server {
 				String user = userpass[0]; 
 				String pass = userpass[1];
 				
-
-				BufferedReader br = new BufferedReader(new FileReader("pass.txt"));
 				String line = "";
 				boolean flag = false;
-				while((line = br.readLine()) != null) {
-					String[] upass = line.split(":");
-					String u = upass[0]; 
-					String p = upass[1];
-					String t = upass[2];
+				
+				try
+				{
+					Connection conn = 
+					DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/chatDB?user=root&password=admin");
+				
+					Statement stmt = conn.createStatement();
+					String checkLogin = "SELECT password FROM users WHERE username='" + user + "';";
+					ResultSet rs = stmt.executeQuery(checkLogin);
+					rs.next();
+					String passDB = rs.getString("password");
 					
-					if(t.equals("777"))
-						t = new String("Admin");
-					else if(t.equals("666"))
-						t = new String("Scrum Master");
-					else if(t.equals("555"))
-						t = new String("Developer");
-
-					if(u.equals(user) && p.equals(pass)) {
-						display(t + " " + user + " just connected.");
+					if(passDB.equals(pass)) 
+					{
+						display(user + " just connected.");
 						username = user;
 						flag = true;
 					}
 				
+					if (flag == false) 
+					{ 
+						String tmp = "denied";
+						sOutput.writeObject(tmp);
+					}
 				}
- 				if (flag == false) { 
-					String tmp = "denied";
-					sOutput.writeObject(tmp);
+				catch (SQLException e)
+				{
+					System.out.println("SQLException: " + e.getMessage());
+					System.out.println("SQLState: " + e.getSQLState());
+					System.out.println("VendorError: " + e.getErrorCode());
 				}
-				br.close();
 			}
 			catch (IOException e) {
 				display("Exception creating new Input/output Streams: " + e);
 				return;
 			}
-			// have to catch ClassNotFoundException
-			// but I read a String, I am sure it will work
 			catch (ClassNotFoundException e) {
 			}
+			
             date = new Date().toString() + "\n";
 		}
 

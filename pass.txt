@@ -1,3 +1,0 @@
-ray:ray:777
-jeff:jeff:666
-developer:one:666
