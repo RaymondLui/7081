@@ -3,13 +3,13 @@
               Any modifications will be overwritten.
               To include a user specific buildfile here, simply create one in the same
               directory with the processing instruction <?eclipse.ant.import?>
-              as the first entry and export the buildfile again. --><project basedir="." default="build" name="ChatProgram">
+              as the first entry and export the buildfile again. --><project basedir="." default="build" name="7081">
     <property environment="env"/>
     <property name="ECLIPSE_HOME" value="../../../../usr/lib64/eclipse"/>
     <property name="debuglevel" value="source,lines,vars"/>
     <property name="target" value="1.7"/>
     <property name="source" value="1.7"/>
-    <path id="ChatProgram.classpath">
+    <path id="7081.classpath">
         <pathelement location="bin"/>
     </path>
     <target name="init">
@@ -31,7 +31,7 @@
         <echo message="${ant.project.name}: ${ant.file}"/>
         <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
             <src path="src"/>
-            <classpath refid="ChatProgram.classpath"/>
+            <classpath refid="7081.classpath"/>
         </javac>
     </target>
     <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
@@ -50,12 +50,12 @@
     </target>
     <target name="ClientGUI">
         <java classname="ClientGUI" failonerror="true" fork="yes">
-            <classpath refid="ChatProgram.classpath"/>
+            <classpath refid="7081.classpath"/>
         </java>
     </target>
     <target name="ServerGUI">
         <java classname="ServerGUI" failonerror="true" fork="yes">
-            <classpath refid="ChatProgram.classpath"/>
+            <classpath refid="7081.classpath"/>
         </java>
     </target>
 </project>
