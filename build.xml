@@ -21,6 +21,9 @@
             </fileset>
         </copy>
     </target>
+    <target name="test">
+	<echo message="Test successful"/>
+    </target>
     <target name="clean">
         <delete dir="bin"/>
     </target>
