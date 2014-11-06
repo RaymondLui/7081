@@ -11,6 +11,7 @@
     <property name="source" value="1.7"/>
     <path id="7081.classpath">
         <pathelement location="bin"/>
+        <pathelement location="../../Downloads/junit-4.10.jar"/>
     </path>
     <target name="init">
         <mkdir dir="bin"/>
@@ -21,11 +22,13 @@
             </fileset>
         </copy>
     </target>
-    <target name="test">
-	<echo message="Test successful"/>
-    </target>
     <target name="clean">
         <delete dir="bin"/>
+    </target>
+    <target name="test">
+	<java classname="Test1" failonerror="true" fork="yes">
+            <classpath refid="7081.classpath"/>
+        </java>
     </target>
     <target depends="clean" name="cleanall"/>
     <target depends="build-subprojects,build-project" name="build"/>
