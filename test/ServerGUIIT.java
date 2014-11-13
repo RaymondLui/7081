@@ -37,9 +37,7 @@ public class ServerGUIIT {
     public void tearDown() {
     }
 
-    /**
-     * Test of appendRoom method, of class ServerGUI.
-     */
+   /**
     @Test
     public void testAppendRoom() {
         System.out.println("appendRoom");
@@ -50,9 +48,6 @@ public class ServerGUIIT {
         fail("The test case is a prototype.");
     }
 
-    /**
-     * Test of appendEvent method, of class ServerGUI.
-     */
     @Test
     public void testAppendEvent() {
         System.out.println("appendEvent");
@@ -63,9 +58,7 @@ public class ServerGUIIT {
         fail("The test case is a prototype.");
     }
 
-    /**
-     * Test of actionPerformed method, of class ServerGUI.
-     */
+   
     @Test
     public void testActionPerformed() {
         System.out.println("actionPerformed");
@@ -76,9 +69,7 @@ public class ServerGUIIT {
         fail("The test case is a prototype.");
     }
 
-    /**
-     * Test of main method, of class ServerGUI.
-     */
+   
     @Test
     public void testMain() {
         System.out.println("main");
@@ -88,9 +79,7 @@ public class ServerGUIIT {
         fail("The test case is a prototype.");
     }
 
-    /**
-     * Test of windowClosing method, of class ServerGUI.
-     */
+   
     @Test
     public void testWindowClosing() {
         System.out.println("windowClosing");
@@ -101,9 +90,7 @@ public class ServerGUIIT {
         fail("The test case is a prototype.");
     }
 
-    /**
-     * Test of windowClosed method, of class ServerGUI.
-     */
+    
     @Test
     public void testWindowClosed() {
         System.out.println("windowClosed");
@@ -114,9 +101,7 @@ public class ServerGUIIT {
         fail("The test case is a prototype.");
     }
 
-    /**
-     * Test of windowOpened method, of class ServerGUI.
-     */
+    
     @Test
     public void testWindowOpened() {
         System.out.println("windowOpened");
@@ -127,9 +112,7 @@ public class ServerGUIIT {
         fail("The test case is a prototype.");
     }
 
-    /**
-     * Test of windowIconified method, of class ServerGUI.
-     */
+    
     @Test
     public void testWindowIconified() {
         System.out.println("windowIconified");
@@ -140,9 +123,7 @@ public class ServerGUIIT {
         fail("The test case is a prototype.");
     }
 
-    /**
-     * Test of windowDeiconified method, of class ServerGUI.
-     */
+   
     @Test
     public void testWindowDeiconified() {
         System.out.println("windowDeiconified");
@@ -153,9 +134,7 @@ public class ServerGUIIT {
         fail("The test case is a prototype.");
     }
 
-    /**
-     * Test of windowActivated method, of class ServerGUI.
-     */
+   
     @Test
     public void testWindowActivated() {
         System.out.println("windowActivated");
@@ -166,17 +145,11 @@ public class ServerGUIIT {
         fail("The test case is a prototype.");
     }
 
-    /**
-     * Test of windowDeactivated method, of class ServerGUI.
-     */
+   */
     @Test
     public void testWindowDeactivated() {
-        System.out.println("windowDeactivated");
-        WindowEvent e = null;
-        ServerGUI instance = null;
-        instance.windowDeactivated(e);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+       
     }
+    
     
 }
